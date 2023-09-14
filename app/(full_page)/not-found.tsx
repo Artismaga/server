@@ -1,4 +1,4 @@
-import { NothingFound } from './error-pages';
+import { NothingFound } from '@/app/error-pages';
 
 export default function NotFound() {
   return (

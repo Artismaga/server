@@ -18,7 +18,7 @@ import {
   Progress,
   Title,
 } from '@mantine/core';
-import { getBackgroundImage } from '../background-images';
+import { getBackgroundImage } from '@/app/background-images';
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { useState, useEffect } from 'react';
 
@@ -142,7 +142,7 @@ function AuthenticationForm(props: PaperProps) {
                 </div>
 
                 <Checkbox
-                    label="I accept terms and conditions"
+                    label={<Text>I accept the <Anchor href='/terms'>terms and conditions</Anchor></Text>}
                     checked={form.values.terms}
                     onChange={(event) => form.setFieldValue('terms', event.currentTarget.checked)}
                     error={form.errors.terms && 'You must agree to terms'}
@@ -182,10 +182,10 @@ export default function Login() {
 
     return (
       <main>
-        <BackgroundImage sx={{height: '100vh'}} src={background}>
+        <BackgroundImage sx={{height: '100vh', ':after': {position: 'absolute', width: '100%', height: '100%', backdropFilter: 'blur(5px)', content: '""', backgroundColor: 'rgba(255, 255, 255, 0.01)', top: 0}}} src={background}>
             <Center h={'100%'}>
-                <div>
-                  <Anchor href="/" underline={false}><Title align='center' mb={8} color='white'>Artismaga</Title></Anchor>
+                <div style={{zIndex: 1}}>
+                  <Anchor href="/" underline={false}><Title sx={{textShadow: '0 4px 10px rgba(0, 0, 0, 0.6)'}} align='center' mb={8} color='white'>Artismaga</Title></Anchor>
                   <AuthenticationForm />
                 </div>
             </Center>

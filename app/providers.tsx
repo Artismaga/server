@@ -9,6 +9,7 @@ import { getCookie, setCookie } from "cookies-next";
 import { IconLogin, IconSearch, IconBrandTwitter } from "@tabler/icons-react";
 import { useServerInsertedHTML } from "next/navigation";
 import { ColorSchemeToggle } from "./color-scheme-toggle";
+import Link from 'next/link';
 
 const onlyPagePaths = [
   '/login',
@@ -85,15 +86,15 @@ function SiteHeader() {
 
   const links = (
     <>
-      <a href="/" className={classes.link}>
-        Home
-      </a>
-      <a href="/novels" className={classes.link}>
+      <Link href="/art" className={classes.link}>
+        Art
+      </Link>
+      <Link href="/novels" className={classes.link}>
         Novels
-      </a>
-      <a href="/comics" className={classes.link}>
+      </Link>
+      <Link href="/comics" className={classes.link}>
         Comics
-      </a>
+      </Link>
     </>
   )
   const rightmost = (
@@ -114,7 +115,7 @@ function SiteHeader() {
       <Header height={60} px="md">
         <Group position="apart" sx={{ height: '100%' }}>
           <Group h={"50%"}>
-            <Anchor underline={false} href="/">
+            <Anchor component={Link} underline={false} href="/">
               <Text color="white" weight={600}>Artismaga</Text>
             </Anchor>
 
@@ -191,8 +192,16 @@ function SiteFooter() {
   );
 }
 
-export default function RootStyleRegistry({ children, serverColorScheme, pathname }: { children: React.ReactElement, serverColorScheme: ColorScheme | null, pathname : string | null }) {
-  const isPageOnly = onlyPagePaths.includes(typeof location !== 'undefined' && location.pathname || pathname as string);
+function pathStartsWith(path: string, items: Array<string>) {
+  for (let i = 0; i < items.length; i++) {
+    if (path.startsWith(items[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export default function RootStyleRegistry({ children, serverColorScheme, isPageOnly=false }: { children: React.ReactElement, serverColorScheme: ColorScheme | null, isPageOnly? : boolean }) {
   const initialColorScheme = (serverColorScheme || getCookie('color-scheme') || 'light') as ColorScheme;
   const [colorScheme, setColorScheme] = useState<ColorScheme>(initialColorScheme);
   const toggleColorScheme = (value?: ColorScheme) => {

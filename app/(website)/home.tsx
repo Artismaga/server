@@ -8,7 +8,6 @@ import {
   Center,
   Title,
   Image,
-  BackgroundImage,
   createStyles,
   rem,
 } from '@mantine/core';
@@ -38,7 +37,7 @@ const useStyles = createStyles((theme) => ({
             height: '100%',
             width: '100%',
             top: 0,
-            backgroundImage: 'linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.6) 75%)',
+            backgroundImage: 'linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.4) 75%)',
             transition: 'transform .3s ease-in-out',
             transform: 'translateY(100%)',
         },
