@@ -68,7 +68,7 @@ export function NothingFound() {
   }
 
   return (
-    <Container className={classes.root}>
+    <Container w="100%" h="100%" className={classes.root}>
       <div className={classes.inner}>
         <Illustration className={classes.image} />
         <div className={classes.content}>

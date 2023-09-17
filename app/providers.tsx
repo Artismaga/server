@@ -80,7 +80,7 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-function SiteHeader() {
+export function SiteHeader() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
   const { classes, theme } = useStyles();
 
@@ -104,9 +104,20 @@ function SiteHeader() {
         icon={<IconSearch size="1rem" stroke={1.5} />}
         data={['Test']}
         withinPortal
+        sx={{
+          [theme.fn.smallerThan('sm')]: {
+            width: '100%',
+          }
+        }}
       />
-      <ColorSchemeToggle />
-      <Button sx={{textDecoration: 'none !important'}} component={Anchor<'a'>} href="/login" leftIcon={<IconLogin />}>Sign in</Button>
+      <Group sx={{
+        [theme.fn.smallerThan('sm')]: {
+          width: '100%',
+        }
+      }}>
+        <ColorSchemeToggle />
+        <Button sx={{textDecoration: 'none !important', [theme.fn.smallerThan('sm')]: {flexGrow: 1}}} component={Anchor<'a'>} href="/login" leftIcon={<IconLogin />}>Sign in</Button>
+      </Group>
     </>
   )
 
@@ -148,14 +159,16 @@ function SiteHeader() {
 
           <Divider my="sm" color={theme.colorScheme === 'dark' ? 'dark.5' : 'gray.1'} />
 
-          {rightmost}
+          <Group dir="row" w="100%" px={theme.spacing.xs} spacing={theme.spacing.md}>
+            {rightmost}
+          </Group>
         </ScrollArea>
       </Drawer>
     </Box>
   );
 }
 
-function SiteFooter() {
+export function SiteFooter() {
   const { classes } = useStyles();
   const links = [
     { label: 'Privacy', link: '/privacy' },
@@ -192,15 +205,6 @@ function SiteFooter() {
   );
 }
 
-function pathStartsWith(path: string, items: Array<string>) {
-  for (let i = 0; i < items.length; i++) {
-    if (path.startsWith(items[i])) {
-      return true;
-    }
-  }
-  return false;
-}
-
 export default function RootStyleRegistry({ children, serverColorScheme, isPageOnly=false }: { children: React.ReactElement, serverColorScheme: ColorScheme | null, isPageOnly? : boolean }) {
   const initialColorScheme = (serverColorScheme || getCookie('color-scheme') || 'light') as ColorScheme;
   const [colorScheme, setColorScheme] = useState<ColorScheme>(initialColorScheme);
@@ -218,7 +222,7 @@ export default function RootStyleRegistry({ children, serverColorScheme, isPageO
   // make sure the color-scheme cookie never expires
   const colorSchemeExpiry = getCookie('color-scheme-expires');
   if (colorSchemeExpiry === undefined || new Date().getTime() > Number.parseInt(colorSchemeExpiry as string)) {
-    setCookie('color-scheme-expires', new Date().getTime() + (60 * 60 * 24 * 400) * 1000, {
+    setCookie('color-scheme', colorScheme, {
       maxAge: 60 * 60 * 24 * 400, // 400 days
     });
     setCookie('color-scheme-expires', new Date().getTime() + (60 * 60 * 24 * 400) * 1000, {
