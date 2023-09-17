@@ -127,7 +127,7 @@ export function SiteHeader() {
         <Group position="apart" sx={{ height: '100%' }}>
           <Group h={"50%"}>
             <Anchor component={Link} underline={false} href="/">
-              <Text color="white" weight={600}>Artismaga</Text>
+              <Text color={theme.colorScheme === 'dark' ? theme.white : theme.black} weight={600}>Artismaga</Text>
             </Anchor>
 
             <Group sx={{ height: '100%' }} spacing={0} className={classes.hiddenMobile}>
