@@ -20,7 +20,8 @@ import {
 } from '@mantine/core';
 import { getBackgroundImage } from '@/app/background-images';
 import { IconCheck, IconX } from '@tabler/icons-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 function PasswordRequirement({ meets, label }: { meets: boolean; label: string }) {
     return (
@@ -52,7 +53,8 @@ function getStrength(password: string) {
     return Math.max(100 - (100 / (requirements.length + 1)) * multiplier, 0);
 }
 
-function AuthenticationForm(props: PaperProps) {
+function AuthenticationForm({ returnpath = '/', ...props }: { returnpath?: string } & PaperProps) {
+    const router = useRouter();
     const [type, toggle] = useToggle(['login', 'register']);
     const form = useForm({
       initialValues: {
@@ -65,10 +67,21 @@ function AuthenticationForm(props: PaperProps) {
       validate: {
         email: (val) => (/^\S+@\S+$/.test(val) ? null : 'Invalid email'),
         password: (val) => type == 'register' && (getStrength(val) < 100 ? 'Password not strong enough' : null) || null,
-        name: (val) => (val.length <= 2 ? 'Name must be longer than 2 characters' : null),
-        terms: (val) => (val ? null : 'You must agree to terms'),
+        name: (val) => (val.length <= 2 && type == 'register' ? 'Name must be longer than 2 characters' : null),
+        terms: (val) => (val || type == 'login' ? null : 'You must agree to terms'),
       },
     });
+    const submitClicked = useCallback(() => {
+      const validateResult = form.validate();
+
+      if (!validateResult.hasErrors) {
+        console.log('form submitted');
+        router.push(returnpath);
+      } else {
+        console.log(validateResult.errors);
+        console.log(form.values);
+      }
+    }, [returnpath, form.values]);
 
     const strength = getStrength(form.values.password);
     const checks = requirements.map((requirement, index) => (
@@ -164,7 +177,7 @@ function AuthenticationForm(props: PaperProps) {
                 ? "Already have an account? Login"
                 : "Don't have an account? Register"}
             </Anchor>
-            <Button type="submit" radius="xl">
+            <Button onClick={submitClicked} type="submit" radius="xl">
               {upperFirst(type)}
             </Button>
           </Group>
@@ -175,6 +188,8 @@ function AuthenticationForm(props: PaperProps) {
 
 export default function Login() {
     const [background, setBackground] = useState('');
+    const searchParams = useSearchParams();
+    const returnPath = searchParams.get('to') || '/';
 
     useEffect(() => {
       setBackground(getBackgroundImage());
@@ -186,7 +201,7 @@ export default function Login() {
             <Center h={'100%'}>
                 <div style={{zIndex: 1}}>
                   <Anchor href="/" underline={false}><Title sx={{textShadow: '0 4px 10px rgba(0, 0, 0, 0.6)'}} align='center' mb={8} color='white'>Artismaga</Title></Anchor>
-                  <AuthenticationForm />
+                  <AuthenticationForm returnpath={returnPath} />
                 </div>
             </Center>
         </BackgroundImage>
