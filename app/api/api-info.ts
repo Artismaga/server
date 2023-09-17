@@ -5,3 +5,8 @@ export const VERSIONS = [
     'v1',
     'dev',
 ];
+
+// List of publicly available versions
+export const PUBLIC_VERSIONS = [
+    'v1',
+];
