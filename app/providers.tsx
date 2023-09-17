@@ -8,7 +8,7 @@ import { useState } from "react";
 import { getCookie, setCookie } from "cookies-next";
 import { IconLogin, IconSearch, IconBrandTwitter } from "@tabler/icons-react";
 import { useServerInsertedHTML } from "next/navigation";
-import { ColorSchemeToggle } from "./color-scheme-toggle";
+import { ColorSchemeToggle } from "@/components/color-scheme-toggle";
 import Link from 'next/link';
 
 const onlyPagePaths = [

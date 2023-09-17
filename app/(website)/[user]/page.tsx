@@ -1,4 +1,4 @@
-import { NothingFound } from '@/app/error-pages';
+import { NothingFound } from '@/components/error-pages';
 import Home from '../home';
 
 export default function Page({ params }: { params: { user: string } }) {

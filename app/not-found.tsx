@@ -1,4 +1,4 @@
-import { NothingFound } from '@/app/error-pages';
+import { NothingFound } from '@/components/error-pages';
 import { SiteHeader, SiteFooter } from './providers';
 
 export default function NotFound() {

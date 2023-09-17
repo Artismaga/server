@@ -18,7 +18,7 @@ import {
   Progress,
   Title,
 } from '@mantine/core';
-import { getBackgroundImage } from '@/app/background-images';
+import { getBackgroundImage } from '@/components/background-images';
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
