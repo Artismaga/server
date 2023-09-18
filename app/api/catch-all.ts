@@ -55,7 +55,9 @@ export async function CATCH_GET(request: NextRequest, { params }: { params: { sl
     const [version, ...path] = params.slug;
 
     if (!VERSIONS.includes(version)) {
-        return new NextResponse(null, { status: 400 });
+        return NextResponse.json({
+            message: 'Not Found'
+        }, { status: 404 });
     }
 
     let route = null;
@@ -72,14 +74,18 @@ export async function CATCH_GET(request: NextRequest, { params }: { params: { sl
         const newRequest: NextRequest = new NextRequest(`${request.nextUrl.origin}/api/${route}`, request);
         return await fetch(newRequest);
     }
-    return new NextResponse(null, { status: 400 });
+    return NextResponse.json({
+        message: 'Not Found'
+    }, { status: 404 });
 }
 
 export async function CATCH_POST(request: NextRequest, { params }: { params: { slug: string[] } }) {
     const [version, ...path] = params.slug;
 
     if (!VERSIONS.includes(version)) {
-        return new NextResponse(null, { status: 400 });
+        return NextResponse.json({
+            message: 'Not Found'
+        }, { status: 404 });
     }
 
     let route = null;
@@ -96,14 +102,18 @@ export async function CATCH_POST(request: NextRequest, { params }: { params: { s
         const newRequest: NextRequest = new NextRequest(`${request.nextUrl.origin}/api/${route}`, request);
         return await fetch(newRequest);
     }
-    return new NextResponse(null, { status: 400 });
+    return NextResponse.json({
+            message: 'Not Found'
+        }, { status: 404 });
 }
 
 export async function CATCH_PATCH(request: NextRequest, { params }: { params: { slug: string[] } }) {
     const [version, ...path] = params.slug;
 
     if (!VERSIONS.includes(version)) {
-        return new NextResponse(null, { status: 400 });
+        return NextResponse.json({
+            message: 'Not Found'
+        }, { status: 404 });
     }
 
     let route = null;
@@ -120,14 +130,18 @@ export async function CATCH_PATCH(request: NextRequest, { params }: { params: { 
         const newRequest: NextRequest = new NextRequest(`${request.nextUrl.origin}/api/${route}`, request);
         return await fetch(newRequest);
     }
-    return new NextResponse(null, { status: 400 });
+    return NextResponse.json({
+            message: 'Not Found'
+        }, { status: 404 });
 }
 
 export async function CATCH_DELETE(request: NextRequest, { params }: { params: { slug: string[] } }) {
     const [version, ...path] = params.slug;
 
     if (!VERSIONS.includes(version)) {
-        return new NextResponse(null, { status: 400 });
+        return NextResponse.json({
+            message: 'Not Found'
+        }, { status: 404 });
     }
 
     let route = null;
@@ -144,14 +158,18 @@ export async function CATCH_DELETE(request: NextRequest, { params }: { params: {
         const newRequest: NextRequest = new NextRequest(`${request.nextUrl.origin}/api/${route}`, request);
         return await fetch(newRequest);
     }
-    return new NextResponse(null, { status: 400 });
+    return NextResponse.json({
+            message: 'Not Found'
+        }, { status: 404 });
 }
 
 export async function CATCH_PUT(request: NextRequest, { params }: { params: { slug: string[] } }) {
     const [version, ...path] = params.slug;
 
     if (!VERSIONS.includes(version)) {
-        return new NextResponse(null, { status: 400 });
+        return NextResponse.json({
+            message: 'Not Found'
+        }, { status: 404 });
     }
 
     let route = null;
@@ -168,5 +186,7 @@ export async function CATCH_PUT(request: NextRequest, { params }: { params: { sl
         const newRequest: NextRequest = new NextRequest(`${request.nextUrl.origin}/api/${route}`, request);
         return await fetch(newRequest);
     }
-    return new NextResponse(null, { status: 400 });
+    return NextResponse.json({
+            message: 'Not Found'
+        }, { status: 404 });
 }
