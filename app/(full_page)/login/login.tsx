@@ -1,5 +1,5 @@
 "use client";
-import { useToggle, upperFirst } from '@mantine/hooks';
+import { upperFirst, useDebouncedState } from '@mantine/hooks';
 import { useForm } from '@mantine/form';
 import {
   TextInput,
@@ -22,6 +22,8 @@ import { getBackgroundImage } from '@/components/background-images';
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { signIn } from 'next-auth/react';
+import Link from 'next/link';
 
 function PasswordRequirement({ meets, label }: { meets: boolean; label: string }) {
     return (
@@ -53,9 +55,9 @@ function getStrength(password: string) {
     return Math.max(100 - (100 / (requirements.length + 1)) * multiplier, 0);
 }
 
-function AuthenticationForm({ returnpath = '/', ...props }: { returnpath?: string } & PaperProps) {
+function AuthenticationForm({ returnpath = '/', register = false, ...props }: { returnpath?: string, register?: boolean } & PaperProps) {
     const router = useRouter();
-    const [type, toggle] = useToggle(['login', 'register']);
+    const type = register ? 'register' : 'login';
     const form = useForm({
       initialValues: {
         email: '',
@@ -71,12 +73,106 @@ function AuthenticationForm({ returnpath = '/', ...props }: { returnpath?: strin
         terms: (val) => (val || type == 'login' ? null : 'You must agree to terms'),
       },
     });
+
+    const [nameEmail, setNE] = useDebouncedState({
+      name: form.values.name,
+      email: form.values.email,
+    }, 200)
+
+    useEffect(() => {
+      if (nameEmail.name != form.values.name || nameEmail.email != form.values.email) {
+        setNE({
+          name: form.values.name,
+          email: form.values.email,
+        });
+      }
+    }, [form.values.name, form.values.email]);
+
+    useEffect(() => {
+      if (type !== 'register') {
+        form.setFieldError('name', null);
+        form.setFieldError('email', null);
+        return;
+      }
+
+      if (nameEmail.name.length == 0 && nameEmail.email.length == 0) return;
+      let url = '/api/auth/register?';
+      if (nameEmail.name.length > 0) {
+        url += `name=${nameEmail.name}`;
+      }
+      if (nameEmail.email.length > 0) {
+        if (nameEmail.name.length > 0) {
+          url += '&';
+        }
+        url += `email=${nameEmail.email}`;
+      }
+
+      fetch(encodeURI(url), {
+        method: 'GET',
+      }).then((response) => {
+        if (response.ok) {
+          response.json().then((json) => {
+            if (json.field == 'email') {
+              form.setFieldError('email', json.message);
+            } else if (json.field == 'name') {
+              if (json?.suggestedName) {
+                form.setFieldError('name', `Name unavailable, however "${json.suggestedName}" is available.`);
+              } else {
+                form.setFieldError('name', json.message);
+              }
+            }
+          });
+        }
+      })
+    }, [nameEmail.email, nameEmail.name]);
+
     const submitClicked = useCallback(() => {
       const validateResult = form.validate();
 
       if (!validateResult.hasErrors) {
-        console.log('form submitted');
-        router.push(returnpath);
+        if (type == 'login') {
+          signIn('credentials', {
+            email: form.values.email,
+            password: form.values.password,
+            callbackUrl: returnpath,
+          })
+        } else {
+          fetch('/api/auth/register', {
+            method: 'POST',
+            body: JSON.stringify({
+              email: form.values.email,
+              password: form.values.password,
+              name: form.values.name,
+            }),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }).then((response) => {
+            if (response.ok) {
+              signIn('credentials', {
+                email: form.values.email,
+                password: form.values.password,
+                callbackUrl: returnpath,
+              });
+            } else {
+              if (response.body) {
+                response.json().then((json) => {
+                  if (json.field == 'email') {
+                    form.setFieldError('email', json.message);
+                  } else if (json.field == 'name') {
+                    if (json?.suggestedName) {
+                      form.setFieldError('name', `Name unavailable, however "${json.suggestedName}" is available.`);
+                    } else {
+                      form.setFieldError('name', json.message);
+                    }
+                  } else if (json.field == 'password') {
+                    form.setFieldError('password', json.message);
+                  }
+                });
+              }
+            }
+          });
+        }
       } else {
         console.log(validateResult.errors);
         console.log(form.values);
@@ -100,7 +196,7 @@ function AuthenticationForm({ returnpath = '/', ...props }: { returnpath?: strin
             size={4}
         />
     ));
-  
+
     return (
       <Paper radius="md" p="xl" withBorder {...props}>
         <Text size="lg" weight={800}>
@@ -116,10 +212,15 @@ function AuthenticationForm({ returnpath = '/', ...props }: { returnpath?: strin
                 label="Name"
                 placeholder="Your name"
                 value={form.values.name}
-                onChange={(event) => form.setFieldValue('name', event.currentTarget.value)}
+                onChange={(event) => {
+                  let value = event.currentTarget.value;
+                  value = value.replace(' ', '_');
+                  form.setFieldValue('name', value);
+                }}
                 error={form.errors.name}
                 radius="md"
                 required
+                autoComplete='off'
               />
             )}
   
@@ -131,6 +232,7 @@ function AuthenticationForm({ returnpath = '/', ...props }: { returnpath?: strin
               onChange={(event) => form.setFieldValue('email', event.currentTarget.value)}
               error={form.errors.email && 'Invalid email'}
               radius="md"
+              autoComplete={type === 'register' ? 'off' : 'email'}
             />
   
             <PasswordInput
@@ -141,6 +243,7 @@ function AuthenticationForm({ returnpath = '/', ...props }: { returnpath?: strin
               onChange={(event) => form.setFieldValue('password', event.currentTarget.value)}
               error={form.errors.password && 'Password not strong enough'}
               radius="md"
+              autoComplete={type === 'register' ? 'new-password' : undefined}
             />
   
             {type === 'register' && (
@@ -167,11 +270,11 @@ function AuthenticationForm({ returnpath = '/', ...props }: { returnpath?: strin
   
           <Group position="apart" mt="xl">
             <Anchor
-              component="button"
+              component={Link}
               type="button"
               color="dimmed"
-              onClick={() => toggle()}
               size="xs"
+              href={type === 'register' ? '/login' : '/register'}
             >
               {type === 'register'
                 ? "Already have an account? Login"
@@ -186,10 +289,10 @@ function AuthenticationForm({ returnpath = '/', ...props }: { returnpath?: strin
     );
 }
 
-export default function Login() {
+export default function Login({register = false}: { register?: boolean }) {
     const [background, setBackground] = useState('');
     const searchParams = useSearchParams();
-    const returnPath = searchParams.get('to') || '/';
+    const returnPath = searchParams.get('callbackUrl') || '/';
 
     useEffect(() => {
       setBackground(getBackgroundImage());
@@ -201,7 +304,7 @@ export default function Login() {
             <Center h={'100%'}>
                 <div style={{zIndex: 1}}>
                   <Anchor href="/" underline={false}><Title sx={{textShadow: '0 4px 10px rgba(0, 0, 0, 0.6)'}} align='center' mb={8} color='white'>Artismaga</Title></Anchor>
-                  <AuthenticationForm returnpath={returnPath} />
+                  <AuthenticationForm register={register} returnpath={returnPath} />
                 </div>
             </Center>
         </BackgroundImage>

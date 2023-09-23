@@ -1,6 +1,7 @@
 "use client";
 import { createEmotionCache, MantineProvider, ColorSchemeProvider, ColorScheme, Text } from "@mantine/core";
 import { createStyles, Header, Group, Button, Autocomplete, Burger, Drawer, Divider, ScrollArea, Box, Anchor, ActionIcon } from "@mantine/core";
+import { UnstyledButton, Avatar, Menu, rem } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Notifications } from "@mantine/notifications";
 import { ModalsProvider } from "@mantine/modals";
@@ -9,11 +10,9 @@ import { getCookie, setCookie } from "cookies-next";
 import { IconLogin, IconSearch, IconBrandTwitter } from "@tabler/icons-react";
 import { useServerInsertedHTML } from "next/navigation";
 import { ColorSchemeToggle } from "@/components/color-scheme-toggle";
+import { SessionProvider, signOut } from 'next-auth/react';
 import Link from 'next/link';
-
-const onlyPagePaths = [
-  '/login',
-];
+import { useSession } from "next-auth/react";
 
 const cache = createEmotionCache({ key: 'mantine' })
 cache.compat = true
@@ -78,7 +77,111 @@ const useStyles = createStyles((theme) => ({
       display: 'none',
     },
   },
+
+  user: {
+    display: 'block',
+    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
+    borderRadius: theme.radius.sm,
+    padding: rem(3),
+    paddingRight: theme.spacing.sm,
+    
+    [theme.fn.smallerThan('sm')]: {
+      flexGrow: 1,
+    },
+
+    '&:hover': {
+      backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0],
+    },
+  },
+
+  userContainer: {
+    paddingY: theme.spacing.xs,
+  },
 }));
+
+import {
+  IconLogout,
+  IconEdit,
+  IconSettings,
+  IconBookmark,
+} from '@tabler/icons-react';
+
+function UserDetails() {
+  const { classes, theme } = useStyles();
+  const { data: session, status } = useSession();
+
+  if (status == 'authenticated') {
+    return (
+      <div className={classes.userContainer}>
+        <Menu
+          withArrow
+          width={300}
+          position="bottom"
+          transitionProps={{ transition: 'pop' }}
+          withinPortal
+        >
+          <Menu.Target>
+            <UnstyledButton className={classes.user}>
+              <Group>
+                <Avatar src={session?.user?.profilePicture} radius="xl" size={rem(35)} />
+
+                <div style={{ flex: 1 }}>
+                  <Text size="sm" fw={500}>
+                    {session?.user?.displayName}
+                  </Text>
+
+                  <Text c="dimmed" size="xs">
+                    {session?.user?.id}
+                  </Text>
+                </div>
+              </Group>
+            </UnstyledButton>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item
+              rightSection={<IconBookmark style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
+              component={Link}
+              href="/account/bookmarks"
+            >
+              Bookmarked works
+            </Menu.Item>
+            <Menu.Item
+              rightSection={<IconEdit style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
+              component={Link}
+              href="/account/works"
+            >
+              Your works
+            </Menu.Item>
+
+            <Menu.Label>Settings</Menu.Label>
+            <Menu.Item
+              rightSection={<IconSettings style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
+              component={Link}
+              href="/account/settings"
+            >
+              Account settings
+            </Menu.Item>
+            <Menu.Item
+              color="red"
+              rightSection={<IconLogout style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
+              onClick={() => signOut()}
+            >
+              Logout
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </div>
+    )
+  } else if (status == 'loading') {
+    return (
+      <></>
+    )
+  } else {
+    return (
+      <Button sx={{textDecoration: 'none !important', [theme.fn.smallerThan('sm')]: {flexGrow: 1}}} component={Anchor<'a'>} href={`/login?callbackUrl=${location.href}`} leftIcon={<IconLogin />}>Sign in</Button>
+    )
+  }
+}
 
 export function SiteHeader() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
@@ -116,7 +219,7 @@ export function SiteHeader() {
         }
       }}>
         <ColorSchemeToggle />
-        <Button sx={{textDecoration: 'none !important', [theme.fn.smallerThan('sm')]: {flexGrow: 1}}} component={Anchor<'a'>} href="/login" leftIcon={<IconLogin />}>Sign in</Button>
+        <UserDetails />
       </Group>
     </>
   )
@@ -244,9 +347,11 @@ export default function RootStyleRegistry({ children, serverColorScheme, isPageO
       <MantineProvider theme={{ colorScheme }} withGlobalStyles withNormalizeCSS emotionCache={cache}>
         <Notifications />
         <ModalsProvider>
-          {!isPageOnly && <SiteHeader />}
-          {children}
-          {!isPageOnly && <SiteFooter />}
+          <SessionProvider>
+            {!isPageOnly && <SiteHeader />}
+            {children}
+            {!isPageOnly && <SiteFooter />}
+          </SessionProvider>
         </ModalsProvider>
       </MantineProvider>
     </ColorSchemeProvider>
