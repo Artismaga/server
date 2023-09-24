@@ -4,7 +4,6 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "@/database/prisma";
 import { compare } from "bcrypt-ts";
-import { randomUUID } from "crypto";
 import { cookies } from "next/headers";
 import { encode, decode } from 'next-auth/jwt';
 import { NextApiRequest, NextApiResponse } from "next";
