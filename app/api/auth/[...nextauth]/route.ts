@@ -1,7 +1,6 @@
 import type { NextAuthOptions } from "next-auth";
 
 import NextAuth from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "@/database/prisma";
 import { compare } from "bcrypt-ts";
@@ -11,19 +10,7 @@ import { encode, decode } from 'next-auth/jwt';
 import { NextApiRequest, NextApiResponse } from "next";
 import { JsonObject } from "@prisma/client/runtime/library";
 
-const adapter = PrismaAdapter(prisma);
-
-// Helper functions to generate unique keys and calculate the expiry dates for session cookies
-const generateSessionToken = () => {
-    return randomUUID();
-}
-
-const fromDate = (time: number, date = Date.now()) => {
-    return new Date(date + time * 1000)
-}
-
 export const authOptions: NextAuthOptions = {
-    adapter: adapter,
     providers: [
         CredentialsProvider({
             credentials: {
@@ -38,7 +25,7 @@ export const authOptions: NextAuthOptions = {
                     return null;
                 }
 
-                const user = await prisma.user.findFirst({
+                const user = await prisma.user.findUnique({
                     where: {
                         email: email,
                     }
@@ -106,34 +93,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     // clone authOptions
     const options: NextAuthOptions = {
         ...authOptions,
-        callbacks: {
-            async signIn({ user }) {
-                if (req.query.nextauth?.includes('callback') && req.query.nextauth.includes('credentials') && req.method === 'POST') {
-                    if (user) {
-                        const sessionToken = generateSessionToken();
-                        const sessionExpiry = fromDate(60 * 60 * 24 * 30);
-                        console.log(sessionExpiry.toString());
-
-                        await adapter.createSession?.({
-                            sessionToken: sessionToken,
-                            userId: user.id,
-                            expires: sessionExpiry,
-                        });
-
-                        const reqCookies = cookies()
-
-                        reqCookies.set('next-auth.session-token', sessionToken, {
-                            expires: sessionExpiry,
-                        });
-                    }
-                }
-
-                return true;
-            },
-
-            ...authOptions.callbacks
-        },
-
         jwt: {
             encode: async ({ token, secret, maxAge }) => {
                 if (req.query.nextauth!.includes('callback') && req.query.nextauth!.includes('credentials') && req.method === 'POST') {
