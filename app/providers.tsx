@@ -1,5 +1,5 @@
 "use client";
-import { createEmotionCache, MantineProvider, ColorSchemeProvider, ColorScheme, Text } from "@mantine/core";
+import { createEmotionCache, MantineProvider, ColorSchemeProvider, ColorScheme, Text, Loader } from "@mantine/core";
 import { createStyles, Header, Group, Button, Autocomplete, Burger, Drawer, Divider, ScrollArea, Box, Anchor, ActionIcon } from "@mantine/core";
 import { UnstyledButton, Avatar, Menu, rem } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
@@ -10,9 +10,15 @@ import { getCookie, setCookie } from "cookies-next";
 import { IconLogin, IconSearch, IconBrandTwitter } from "@tabler/icons-react";
 import { useServerInsertedHTML } from "next/navigation";
 import { ColorSchemeToggle } from "@/components/color-scheme-toggle";
-import { SessionProvider, signOut } from 'next-auth/react';
+import { SessionProvider, signIn, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useSession } from "next-auth/react";
+import {
+  IconLogout,
+  IconEdit,
+  IconSettings,
+  IconBookmark,
+} from '@tabler/icons-react';
 
 const cache = createEmotionCache({ key: 'mantine' })
 cache.compat = true
@@ -99,13 +105,6 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-import {
-  IconLogout,
-  IconEdit,
-  IconSettings,
-  IconBookmark,
-} from '@tabler/icons-react';
-
 function UserDetails() {
   const { classes, theme } = useStyles();
   const { data: session, status } = useSession();
@@ -141,14 +140,14 @@ function UserDetails() {
             <Menu.Item
               rightSection={<IconBookmark style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
               component={Link}
-              href="/account/bookmarks"
+              href="/my/bookmarks"
             >
               Bookmarked works
             </Menu.Item>
             <Menu.Item
               rightSection={<IconEdit style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
               component={Link}
-              href="/account/works"
+              href="/my/works"
             >
               Your works
             </Menu.Item>
@@ -157,7 +156,7 @@ function UserDetails() {
             <Menu.Item
               rightSection={<IconSettings style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
               component={Link}
-              href="/account/settings"
+              href="/my/settings"
             >
               Account settings
             </Menu.Item>
@@ -174,11 +173,11 @@ function UserDetails() {
     )
   } else if (status == 'loading') {
     return (
-      <></>
+      <Loader />
     )
   } else {
     return (
-      <Button sx={{textDecoration: 'none !important', [theme.fn.smallerThan('sm')]: {flexGrow: 1}}} component={Anchor<'a'>} href={`/login?callbackUrl=${location.href}`} leftIcon={<IconLogin />}>Sign in</Button>
+      <Button sx={{textDecoration: 'none !important', [theme.fn.smallerThan('sm')]: {flexGrow: 1}}} onClick={() => signIn()} leftIcon={<IconLogin />}>Sign in</Button>
     )
   }
 }
