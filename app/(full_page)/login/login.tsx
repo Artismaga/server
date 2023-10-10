@@ -23,7 +23,7 @@ import { getBackgroundImage } from '@/components/background-images';
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 
 function PasswordRequirement({ meets, label }: { meets: boolean; label: string }) {
@@ -58,6 +58,9 @@ function getStrength(password: string) {
 
 function AuthenticationForm({ returnpath = '/', register = false, ...props }: { returnpath?: string, register?: boolean } & PaperProps) {
     const router = useRouter();
+    if (useSession().status == 'authenticated') {
+      router.push('/account/settings');
+    }
     const type = register ? 'register' : 'login';
     const form = useForm({
       initialValues: {
