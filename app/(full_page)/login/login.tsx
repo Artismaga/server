@@ -17,6 +17,7 @@ import {
   Box,
   Progress,
   Title,
+  LoadingOverlay,
 } from '@mantine/core';
 import { getBackgroundImage } from '@/components/background-images';
 import { IconCheck, IconX } from '@tabler/icons-react';
@@ -74,10 +75,11 @@ function AuthenticationForm({ returnpath = '/', register = false, ...props }: { 
       },
     });
 
+    const [submitting, setSubmitting] = useState(false);
     const [nameEmail, setNE] = useDebouncedState({
       name: form.values.name,
       email: form.values.email,
-    }, 200)
+    }, 200);
 
     useEffect(() => {
       if (nameEmail.name != form.values.name || nameEmail.email != form.values.email) {
@@ -126,10 +128,11 @@ function AuthenticationForm({ returnpath = '/', register = false, ...props }: { 
       })
     }, [nameEmail.email, nameEmail.name]);
 
-    const submitClicked = useCallback(() => {
+    const submitClicked = () => {
       const validateResult = form.validate();
 
       if (!validateResult.hasErrors) {
+        setSubmitting(true);
         if (type == 'login') {
           signIn('credentials', {
             email: form.values.email,
@@ -152,7 +155,6 @@ function AuthenticationForm({ returnpath = '/', register = false, ...props }: { 
               signIn('credentials', {
                 email: form.values.email,
                 password: form.values.password,
-                callbackUrl: returnpath,
               });
             } else {
               if (response.body) {
@@ -171,13 +173,14 @@ function AuthenticationForm({ returnpath = '/', register = false, ...props }: { 
                 });
               }
             }
+            setSubmitting(false);
           });
         }
       } else {
         console.log(validateResult.errors);
         console.log(form.values);
       }
-    }, [returnpath, form.values]);
+    };
 
     const strength = getStrength(form.values.password);
     const checks = requirements.map((requirement, index) => (
@@ -189,7 +192,7 @@ function AuthenticationForm({ returnpath = '/', register = false, ...props }: { 
         <Progress
             styles={{ bar: { transitionDuration: '0ms' } }}
             value={
-            form.values.password.length > 0 && index === 0 ? 100 : strength >= ((index + 1) / 4) * 100 ? 100 : 0
+              form.values.password.length > 0 && index === 0 ? 100 : strength >= ((index + 1) / 4) * 100 ? 100 : 0
             }
             color={strength > 80 ? 'teal' : strength > 50 ? 'yellow' : 'red'}
             key={index}
@@ -198,7 +201,8 @@ function AuthenticationForm({ returnpath = '/', register = false, ...props }: { 
     ));
 
     return (
-      <Paper radius="md" p="xl" withBorder {...props}>
+      <Paper pos="relative" radius="md" p="xl" withBorder {...props}>
+        <LoadingOverlay visible={submitting} zIndex={1000} radius="sm" overlayBlur={2} />
         <Text size="lg" weight={800}>
           <Center>
             {type == 'register' && 'Create an account' || 'Welcome back!'}
@@ -280,7 +284,7 @@ function AuthenticationForm({ returnpath = '/', register = false, ...props }: { 
                 ? "Already have an account? Login"
                 : "Don't have an account? Register"}
             </Anchor>
-            <Button onClick={submitClicked} type="submit" radius="xl">
+            <Button onClick={submitClicked} disabled={submitting} type="submit" radius="xl">
               {upperFirst(type)}
             </Button>
           </Group>
